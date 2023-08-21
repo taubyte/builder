@@ -2,6 +2,8 @@ module github.com/taubyte/builder
 
 go 1.19
 
+replace github.com/taubyte/go-simple-container => ../go-simple-container
+
 require (
 	github.com/otiai10/copy v1.12.0
 	github.com/taubyte/go-interfaces v0.2.4

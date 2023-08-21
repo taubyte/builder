@@ -49,6 +49,7 @@ func (b *builder) run(output *output, image *ci.Image, environment specs.Environ
 		return fmt.Errorf("creating temp dir failed with: %w", err)
 	}
 
+	// TODO: We should not have to instantiate new containers for each workflow, will need to make slight configurations to go-simple-container as well
 	for _, script := range b.config.Workflow {
 		ops = append(ops, b.wd.DefaultOptions(script, output.outDir, environment)...)
 		container, err := image.Instantiate(b.context, ops...)
@@ -58,30 +59,24 @@ func (b *builder) run(output *output, image *ci.Image, environment specs.Environ
 
 		log, err := container.Run(b.context)
 		if err != nil {
-			return formatRunLogErr(log, err)
+			err = fmt.Errorf("running container failed with: %w", err)
 		}
-
-		if _, err = output.logs.CopyFrom(log.Combined()); err != nil {
-			return formatRunLogErr(log, err)
+		if log != nil {
+			if _, _err := output.logs.CopyFrom(log.Combined()); _err != nil {
+				_err = fmt.Errorf("copying logs failed with: %w", err)
+				if err != nil {
+					err = fmt.Errorf("%s:%w", err, _err)
+				} else {
+					err = _err
+				}
+			}
+		}
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
-}
-
-func formatRunLogErr(logs *ci.MuxedReadCloser, err error) error {
-	formattedErr := fmt.Errorf("container script execution failed with: %w\n LOGS: ", err)
-	if logs != nil {
-		stderr, err := io.ReadAll(logs.Combined())
-		if err != nil {
-			formattedErr = fmt.Errorf("%s reading logs failed with: %w", formattedErr, err)
-		}
-		formattedErr = fmt.Errorf("%s %s", formattedErr, string(stderr))
-	} else {
-		formattedErr = fmt.Errorf("%s nil", formattedErr)
-	}
-
-	return formattedErr
 }
 
 // Close cleans the builder config and closes the container client
@@ -140,7 +135,9 @@ func (l logs) CopyFrom(src io.Reader) (int64, error) {
 func (l logs) FormatErr(format string, args ...any) (formatErr error) {
 	formatErr = fmt.Errorf("build failed with: %s", fmt.Sprintf(format, args...))
 	if l.File != nil {
+		l.File.Seek(0, io.SeekEnd)
 		l.File.WriteString(formatErr.Error())
+		l.File.Seek(0, io.SeekStart)
 	}
 
 	return
