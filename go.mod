@@ -4,10 +4,10 @@ go 1.19
 
 require (
 	github.com/otiai10/copy v1.12.0
-	github.com/taubyte/go-interfaces v0.2.4
-	github.com/taubyte/go-simple-container v0.4.2
+	github.com/taubyte/go-interfaces v0.2.13
+	github.com/taubyte/go-simple-container v0.4.3
 	github.com/taubyte/go-simple-git v0.2.5
-	github.com/taubyte/go-specs v0.10.5
+	github.com/taubyte/go-specs v0.10.7
 	github.com/taubyte/utils v0.1.6
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools/v3 v3.5.0

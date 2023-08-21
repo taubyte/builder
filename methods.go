@@ -81,7 +81,7 @@ func (b *builder) run(output *output, image *ci.Image, environment specs.Environ
 
 // Close cleans the builder config and closes the container client
 func (b *builder) Close() error {
-	if err := b.containerClient.Close(); err != nil {
+	if err := b.containerClient.Docker.Close(); err != nil {
 		return fmt.Errorf("closing container client failed with: %w", err)
 	}
 
